@@ -214,6 +214,10 @@ class Tablic:
                     validTakes.append([card,take])
         return validTakes
 
+    def isTabla(self,take):
+        if sorted(take)==sorted(self._table):
+            return True
+        return False
 
     def _addToTable(self, cards):
         if not isinstance(cards, (list)):
