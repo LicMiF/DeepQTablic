@@ -55,6 +55,14 @@ class Tablic:
     @property
     def rewards(self):
         return self._rewards
+    
+    @property
+    def table(self):
+        return self._table
+    
+    @property
+    def hands(self):
+        return self._hands
 
 
     @classmethod
@@ -357,14 +365,5 @@ class Tablic:
         print(f"Opposite player reward: {self._rewards[1-self._currentPlayer]}")
         print(50*"-")
         print(f"Current player: {self._currentPlayer}, last to take: {self._lastToTake}, deck pointer: {self._deckPointer}")
-        
-
-        
-        
-    
-        
-
-        
-        
-        
-        
+        print()
+        print()
