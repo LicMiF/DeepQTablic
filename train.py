@@ -29,7 +29,8 @@ if __name__ == '__main__':
     epsilon = EPSILON_START
     start = time.time()
     for episode in range(1, EPISODES+1):
-        game = Tablic()
+        deck= Tablic.getShuffledDeck()
+        game = Tablic(deck=deck)
         game_actions = [[],[]]
         game_rewards = [[],[]]
         game_valid_actions = [[],[]]
@@ -66,7 +67,7 @@ if __name__ == '__main__':
             agent.backward()
         if episode % SAVE_FREQ == 0:
             print(f"Episode {episode} saved.")
-            agent.saveModelsParams(f"models/minimalModelParams/g{int(GAMMA*100)}e{episode}")
+            agent.saveModelsParams(f"models/minimalModelParams/g1{int(GAMMA*100)}e{episode}")
         epsilon = max(epsilon - EPSILON_DECAY, EPSILON_END)
         print("Done Game")
     agent.saveModelsParams(f"models/minimalModelParams/g{int(GAMMA*100)}e{episode}")

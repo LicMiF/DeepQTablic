@@ -140,6 +140,29 @@ def testBackward():
     
     print(isEqu)
 
+
+def verifySavingAndLoading():
+    newAgent=DQNAgent()
+    newAgent.loadModelsParams(f"models/minimalModelParams/g0e100")
+
+    oldAgent=DQNAgent()
+    oldAgent.loadModelsParams(f"models/minimalModelParams/g10e100")
+
+    isEqu=True
+    for (param1,param2) in zip(newAgent.target.parameters(),oldAgent.target.parameters()):
+        
+        isEqu=isEqu and torch.equal(param1, param2)
+    
+    print(isEqu)
+
+    isEqu=True
+    for (param1,param2) in zip(newAgent.current.parameters(),oldAgent.current.parameters()):
+        
+        isEqu=isEqu and torch.equal(param1, param2)
+    
+    print(isEqu)
+
+
 if __name__=="__main__":
     # initTests() 
     # testForward()
