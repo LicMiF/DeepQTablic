@@ -4,3 +4,5 @@
 /benchmarking/__pycache__/
 cacheOptimizationChanges.py
 /models/
+/dqn/__pycache__/
+/players/__pycache__/

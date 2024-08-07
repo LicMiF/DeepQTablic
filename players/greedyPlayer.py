@@ -1,4 +1,4 @@
-from player import Player
+from players.player import Player
 from tablic import Tablic
 import numpy as np
 

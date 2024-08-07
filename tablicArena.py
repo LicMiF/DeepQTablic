@@ -1,5 +1,5 @@
 from tablic import Tablic
-from greedyPlayer import GreedyPlayer
+from players.greedyPlayer import GreedyPlayer
 import random
 
 class TablicArena:

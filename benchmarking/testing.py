@@ -190,6 +190,10 @@ def checkStateActions():
         game.displayGameInfo()
         print(allValidTakes)
         print(allValidStateActions)
+        print()
+        print(Tablic.getCardTakeFromActionRepresentation(allValidStateActions[0][:26]))
+        print()
+        print(f"State action length {len(allValidStateActions[0])}")
         randPlay=random.choice(allValidTakes)
         game.playCard(randPlay[0],list(randPlay[1]))
 

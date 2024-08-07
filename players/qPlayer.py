@@ -1,5 +1,5 @@
-from player import Player
-from dqnAgent import DQNAgent
+from players.player import Player
+from dqn.dqnAgent import DQNAgent
 import torch
 import numpy as np
 import random

@@ -1,9 +1,9 @@
-from dqnAgent import DQNAgent
+from dqn.dqnAgent import DQNAgent
 from tablic import Tablic
 import random
 import torch
 from torch import Tensor
-from replayBuffer import ReplayBuffer
+from dqn.replayBuffer import ReplayBuffer
 
 
 def initTests():

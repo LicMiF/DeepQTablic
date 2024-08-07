@@ -1,5 +1,5 @@
-from dqn import DQN
-from replayBuffer import ReplayBuffer
+from dqn.dqn import DQN
+from dqn.replayBuffer import ReplayBuffer
 import numpy as np
 import torch
 
