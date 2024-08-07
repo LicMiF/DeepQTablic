@@ -181,12 +181,27 @@ def checkIsTabla():
     game.displayGameInfo()
     print(game.isTabla(game._table+[2]))
 
+def checkStateActions():
+    deck=Tablic.getShuffledDeck(5)
+    game=Tablic(deck=deck)
+    while not game.isTerminal:
+        allValidTakes=Tablic.allValidTakes(game.table,game._hands[game.currentPlayer])
+        allValidStateActions=Tablic.allValidStateActions(game.table,game._hands[game.currentPlayer],game.getGameStateRepresentation())
+        game.displayGameInfo()
+        print(allValidTakes)
+        print(allValidStateActions)
+        randPlay=random.choice(allValidTakes)
+        game.playCard(randPlay[0],list(randPlay[1]))
+
+
 def initWorkDir():
     import sys
     import os
 
     parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     sys.path.append(parent_dir)
+
+
 
 
 if __name__=="__main__":
@@ -199,7 +214,8 @@ if __name__=="__main__":
     from tablic import Tablic
 
     # measureValidTakesPerformanceForEach()
-    compareAllValidTakes(1000)
+    # compareAllValidTakes(1000)
+    checkStateActions()
     # print(Tablic.isValidTake(13, (6, 4, 5, 5, 3, 3)))
     # testObservationVectors()
     # checkIsTabla()

@@ -222,6 +222,26 @@ class Tablic:
                     validTakes.append([card,take])
         return validTakes
 
+    @classmethod
+    def allValidStateActions(cls,cards,hand,stateRepresentation):
+        allTakes = chain(list(combination) for r in range(0, len(cards)+1) for combination in combinations(cards, r))
+        allUniqueTakes = set(tuple(sorted(comb)) for comb in allTakes)
+        validStateActions=[]
+        for take in allUniqueTakes:
+            for card in set(hand):
+                if cls.isValidTake(card,take):
+                    validStateActions.append(
+                        np.concatenate(
+                        (cls.getActionRepresentation(card,take),
+                         stateRepresentation)))
+        return validStateActions
+    
+    @classmethod
+    def getActionRepresentation(cls,card, take):
+        return np.concatenate((cls.cardsToIndexArray(take),
+        cls.cardsToIndexArray([card])))
+
+
     def isTabla(self,take):
         if sorted(take)==sorted(self._table):
             return True
@@ -336,7 +356,7 @@ class Tablic:
         return totSum
         
 
-    def getPlayerObservationVector(self,player):
+    def getPlayersStateRepresentation(self,player):
         return np.concatenate((self.cardsToIndexArray(self._table),
                                self.cardsToIndexArray(self._hands[player]),
                                self.cardsToIndexArray(self._taken[player]),
@@ -344,7 +364,7 @@ class Tablic:
                                [self._lastToTake,player]))
     
 
-    def getGameObservationVector(self):
+    def getGameStateRepresentation(self):
         return np.concatenate((self.cardsToIndexArray(self._table),
                                self.cardsToIndexArray(self._hands[self._currentPlayer]),
                                self.cardsToIndexArray(self._taken[self._currentPlayer]),
