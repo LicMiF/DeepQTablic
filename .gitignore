@@ -3,3 +3,4 @@
 /.vscode/
 /benchmarking/__pycache__/
 cacheOptimizationChanges.py
+/models/

@@ -240,6 +240,11 @@ class Tablic:
     def getActionRepresentation(cls,card, take):
         return np.concatenate((cls.cardsToIndexArray(take),
         cls.cardsToIndexArray([card])))
+    
+    @classmethod
+    def getCardTakeFromActionRepresentation(cls,action):
+        return [cls.indexArrayToCards(action[13:])[0],
+        tuple(cls.indexArrayToCards(action[:13]))]
 
 
     def isTabla(self,take):
