@@ -87,6 +87,7 @@ if __name__ == '__main__':
                 player.agent.remember(action, reward, valid_actions)
         
         if episode % UPDATE_FREQ == 0:
+            print(f"Time needed for {episode} episodes: {time.time()-start}")
             agent.backward()
 
 
