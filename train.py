@@ -25,13 +25,33 @@ GAMMA = 0
 # Device
 DEVICE="cpu"
 
+# Checkpoint path
+chckPointPath=None
 if __name__ == '__main__':
     random.seed(0)
     agent=DQNAgent(GAMMA,device=DEVICE)
     player = QPlayer(agent)
     epsilon = EPSILON_START
+    startEpisode=1
     start = time.time()
-    for episode in range(1, EPISODES+1):
+
+    if chckPointPath:
+        trainDict=agent.loadCheckpoint(chckPointPath)
+        startEpisode=trainDict['episode']
+        epsilon=trainDict['epsilon']
+        EPISODES=trainDict['EPISODES']
+        SAVE_FREQ=trainDict['SAVE_FREQ']
+        UPDATE_FREQ=trainDict['UPDATE_FREQ']
+        SWITCH_FREQ=trainDict['SWITCH_FREQ']
+        EPSILON_END=trainDict['EPSILON_END']
+        EPSILON_DECAY=trainDict['EPSILON_DECAY']
+        elapsedTime=trainDict['elapsedTime']
+
+        start=start-elapsedTime
+
+        random.setstate(trainDict['rngState'])
+
+    for episode in range(startEpisode, EPISODES+1):
         deck= Tablic.getShuffledDeck()
         game = Tablic(deck=deck)
         game_actions = [[],[]]
@@ -68,9 +88,25 @@ if __name__ == '__main__':
         
         if episode % UPDATE_FREQ == 0:
             agent.backward()
+
+
         if episode % SAVE_FREQ == 0:
             print(f"Episode {episode} saved.")
             agent.saveModelsParams(f"models/minimalModelParams/g1{int(GAMMA*100)}e{episode}")
+
+            agent.saveCheckpoint({
+                'episode': episode+1,
+                'epsilon' : max(epsilon - EPSILON_DECAY, EPSILON_END),
+                'EPISODES' : EPISODES,
+                'SAVE_FREQ' : SAVE_FREQ,
+                'UPDATE_FREQ' : UPDATE_FREQ,
+                'SWITCH_FREQ' : SWITCH_FREQ,
+                'EPSILON_END' : EPSILON_END,
+                'EPSILON_DECAY' : EPSILON_DECAY,
+                'rngState': random.getstate(),
+                'elapsedTime' : time.time()-start,
+            },f"models/minimalModelParams/checkpoint1{int(GAMMA*100)}e{episode}")
+
         epsilon = max(epsilon - EPSILON_DECAY, EPSILON_END)
         print("Done Game")
     agent.saveModelsParams(f"models/minimalModelParams/g{int(GAMMA*100)}e{episode}")

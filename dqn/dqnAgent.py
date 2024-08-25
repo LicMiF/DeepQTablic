@@ -52,9 +52,36 @@ class DQNAgent():
         torch.save(self.current.state_dict(), path+"Curr.pth")
         torch.save(self.target.state_dict(), path+"Target.pth")
 
+    def saveCheckpoint(self,trainDict,path):
+        trainDict["curr"]=self.current.state_dict()
+        trainDict["target"]=self.target.state_dict()
+        trainDict["optimizer"]=self.optimizer.state_dict()
+        trainDict["buffer"]=self.buffer
+        trainDict["gamma"]=self.gamma
+        trainDict["device"]=self.device
+        trainDict["miniBatchSize"]=self.miniBatchSize
+        trainDict["torchRngState"]= torch.get_rng_state()
+        if self.device == "cuda":
+            trainDict["cudaRngState"]=torch.cuda.get_rng_state_all() 
+        torch.save(trainDict,path)
+
     def loadModelsParams(self,path):
         self.current.load_state_dict(torch.load(path+"Curr.pth"))
         self.target.load_state_dict(torch.load(path+"Target.pth"))
+
+    def loadCheckpoint(self, path):
+        trainDict=torch.load(path)
+        self.current.load_state_dict(trainDict["curr"])
+        self.target.load_state_dict(trainDict["target"])
+        self.optimizer.load_state_dict(trainDict["optimizer"])
+        self.buffer=trainDict["buffer"]
+        self.gamma=trainDict["gamma"]
+        self.device=trainDict["device"]
+        self.miniBatchSize = trainDict["miniBatchSize"]
+        torch.set_rng_state(trainDict['torchRngState'])
+        if self.device == "cuda":
+            torch.cuda.set_rng_state_all(trainDict['cudaRngState'])
+        return trainDict
 
     def updateTarget(self):
         self.target.load_state_dict(self.current.state_dict())
