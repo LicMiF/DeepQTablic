@@ -22,9 +22,12 @@ EPSILON_DECAY = (EPSILON_START - EPSILON_END) / EPISODES
 # Gamma
 GAMMA = 0
 
+# Device
+DEVICE="cpu"
+
 if __name__ == '__main__':
     random.seed(0)
-    agent=DQNAgent(GAMMA)
+    agent=DQNAgent(GAMMA,device=DEVICE)
     player = QPlayer(agent)
     epsilon = EPSILON_START
     start = time.time()

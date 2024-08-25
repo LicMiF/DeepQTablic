@@ -5,9 +5,13 @@ import torch
 
 class DQNAgent():
 
-    def __init__(self,gamma=0,replBufferSize=1024*16,miniBatchSize=1024,alpha=0.001):
+    def __init__(self,gamma=0,replBufferSize=1024*16,miniBatchSize=1024,alpha=0.001, device="cpu"):
         
-        self.device=self.getAvailDevice()
+        if device=="cuda" and not torch.cuda.is_available():
+            raise SystemExit("Selected device is not available on current machine")
+        
+        self.device=device
+
         self.setTorchSeed(0)
 
         self.target = DQN().to(self.device)
@@ -32,7 +36,6 @@ class DQNAgent():
                 if torch.backends.mps.is_available()
                 else "cpu"
             )
-        # print(f"Using {device} device")
         return device
     
     @classmethod
