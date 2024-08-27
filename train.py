@@ -1,6 +1,7 @@
 from tablic import Tablic
 from dqn.dqnAgent import DQNAgent
 from players.qPlayer import QPlayer
+from plot import Tracker
 import numpy as np
 import time
 import random
@@ -13,6 +14,8 @@ SAVE_FREQ = 5000
 UPDATE_FREQ = 5
 # Switch nets frequency
 SWITCH_FREQ = 50
+# Plot frequency
+PLOT_FREQ=1000
 
 # Epsilon
 EPSILON_START = 1.0
@@ -28,7 +31,7 @@ DEVICE="cpu"
 # Checkpoint path
 chckPointPath=None
 if __name__ == '__main__':
-
+    tracker=Tracker(100)
     for ALPHA in [0.0005,0.0002]:
         for GAMMA in [0,0.5,0.75,0.85,0.95,1]:
             print(f"Training with gamma {GAMMA} started and {ALPHA}.")
@@ -97,7 +100,7 @@ if __name__ == '__main__':
 
                 if episode % SAVE_FREQ == 0:
                     print(f"Episode {episode} saved.")
-                    agent.saveModelsParams(f"models/minimalModelParams/a{ALPHA*100}g{int(GAMMA*100)}e{episode}")
+                    agent.saveModelsParams(f"models/minimalModelParams/a{ALPHA*10000}g{int(GAMMA*100)}e{episode}")
 
                     agent.saveCheckpoint({
                         'episode': episode+1,
@@ -110,10 +113,12 @@ if __name__ == '__main__':
                         'EPSILON_DECAY' : EPSILON_DECAY,
                         'rngState': random.getstate(),
                         'elapsedTime' : time.time()-start,
-                    },f"models/minimalModelParams/checkpoint{ALPHA*100}{int(GAMMA*100)}e{episode}")
-
+                    },f"models/minimalModelParams/checkpoint{int(ALPHA*10000)}{int(GAMMA*100)}e{episode}")
+                
+                if episode>=PLOT_FREQ and (episode % PLOT_FREQ == 0):
+                    tracker.evaluate(player,alpha=ALPHA,gamma=GAMMA,episode=episode)
+                    
                 epsilon = max(epsilon - EPSILON_DECAY, EPSILON_END)
 
-            agent.saveModelsParams(f"models/minimalModelParams/a{ALPHA*100}g{int(GAMMA*100)}e{episode}")
             end = time.time()
             print(f"Training with GAMMA={GAMMA} lasted {end-start} seconds.")
