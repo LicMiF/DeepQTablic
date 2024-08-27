@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
                 if episode % SAVE_FREQ == 0:
                     print(f"Episode {episode} saved.")
-                    agent.saveModelsParams(f"models/minimalModelParams/a{ALPHA*10000}g{int(GAMMA*100)}e{episode}")
+                    agent.saveModelsParams(f"models/minimalModelParams/a{int(ALPHA*10000)}g{int(GAMMA*100)}e{episode}")
 
                     agent.saveCheckpoint({
                         'episode': episode+1,
