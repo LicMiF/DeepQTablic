@@ -1,5 +1,6 @@
 from tablic import Tablic
 from players.greedyPlayer import GreedyPlayer
+from players.qPlayer import QPlayer
 import random
 
 class TablicArena:
@@ -46,11 +47,13 @@ class TablicArena:
 
 
 if __name__ == '__main__':
-    BATTLES = 20
-    player0 = GreedyPlayer()
+    BATTLES = 100
+    player0 = QPlayer()
+    player0.loadModelParams("models/minimalModelParams/g10e49000")
     player1 = GreedyPlayer()
+    # player1 = GreedyPlayer(True)
     arena = TablicArena(player0, player1)
-    wins, draws, loses, pts, opp_pts = arena.simulate_games(BATTLES,True, 0)
+    wins, draws, loses, pts, opp_pts = arena.simulate_games(BATTLES,False, 0)
     print(f"W:{wins}, D:{draws}, L:{loses}")
     print(pts / BATTLES, opp_pts / BATTLES)
     print()
