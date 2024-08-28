@@ -2,15 +2,17 @@ from dqn.dqn import DQN
 from dqn.replayBuffer import ReplayBuffer
 import numpy as np
 import torch
+from dqn.prioritizedMem import Memory
 
 class DQNAgent():
 
-    def __init__(self,gamma=0,replBufferSize=1024*16,miniBatchSize=1024,alpha=0.001, device="cpu"):
+    def __init__(self,gamma=0,replBufferSize=1024*16,miniBatchSize=1024,alpha=0.001, device="cpu",prioritized=False):
         
         if device=="cuda" and not torch.cuda.is_available():
             raise SystemExit("Selected device is not available on current machine")
         
         self.device=device
+        self.prioritized=prioritized
 
         self.setTorchSeed(0)
 
@@ -21,7 +23,11 @@ class DQNAgent():
         # self.gamma = torch.tensor(gamma).reshape((1,1))
         self.gamma=gamma
         self.miniBatchSize = miniBatchSize
-        self.buffer=ReplayBuffer(size=replBufferSize)
+
+        if self.prioritized:
+            self.buffer=Memory(capacity=replBufferSize)
+        else:
+            self.buffer=ReplayBuffer(size=replBufferSize)
 
         self.lossFn = torch.nn.MSELoss(reduction='sum')
         self.optimizer = torch.optim.Adam(self.current.parameters(),
@@ -86,11 +92,33 @@ class DQNAgent():
     def updateTarget(self):
         self.target.load_state_dict(self.current.state_dict())
 
+    def calculateError(self, SA, reward, nextStateSAs):
+        with torch.no_grad():
+            qVal = self.current.forward(SA.to(self.device))
+            if nextStateSAs.numel() == 0:
+                targetQVal = reward
+            else:
+                targetQVal = reward + self.gamma * torch.max(self.target(nextStateSAs.to(self.device)))
+            
+            return torch.abs(qVal-targetQVal).data.numpy()
+    
     def remember(self, SA, reward, nextStateSAs):
-        self.buffer.add((torch.tensor(SA,dtype=torch.float32), reward,torch.tensor(np.array(nextStateSAs),dtype=torch.float32)))
+        sa,rew,nSAs=(torch.tensor(SA,dtype=torch.float32), reward,torch.tensor(np.array(nextStateSAs),dtype=torch.float32))
+
+        if self.prioritized:
+            error=self.calculateError(sa,rew,nSAs)
+            self.buffer.add(error, (sa,rew,nSAs))
+        else:
+            self.buffer.add((sa,rew,nSAs))
 
     def backward(self):
-        miniBatch = self.buffer.sample(self.miniBatchSize)
+        if self.prioritized:
+            miniBatch, idxs, isWeights = self.buffer.sample(self.miniBatchSize)
+        else:
+            miniBatch = self.buffer.sample(self.miniBatchSize)
+
+        # print(miniBatch)
+
         currentSAmb = torch.zeros([len(miniBatch), 80])
 
         for ind, (SA, _, _) in enumerate(miniBatch):
@@ -105,6 +133,14 @@ class DQNAgent():
                 else:
                     targetQVals[ind] = reward + self.gamma * torch.max(self.target(nextStateSAs.to(self.device)))
         
+            if self.prioritized:
+                errors=torch.abs(qVals-targetQVals).data.numpy()
+
+                # update priority
+                for i in range(len(miniBatch)):
+                    idx = idxs[i]
+                    self.buffer.update(idx, errors[i])
+
         loss = self.lossFn(qVals, targetQVals)
         loss.backward()
         self.optimizer.step()
