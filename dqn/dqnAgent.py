@@ -1,18 +1,25 @@
 from dqn.dqn import DQN
 from dqn.replayBuffer import ReplayBuffer
+from dqn.prioritizedMem import Memory
 import numpy as np
 import torch
-from dqn.prioritizedMem import Memory
+from collections import deque
+
 
 class DQNAgent():
 
-    def __init__(self,gamma=0,replBufferSize=1024*16,miniBatchSize=1024,alpha=0.001, device="cpu",prioritized=False):
+    def __init__(self,gamma,nStepSize,replBufferSize=1024*16,miniBatchSize=1024,alpha=0.001, device="cpu",prioritized=False,multiStep=False):
         
         if device=="cuda" and not torch.cuda.is_available():
             raise SystemExit("Selected device is not available on current machine")
         
         self.device=device
         self.prioritized=prioritized
+        self.multiStep=multiStep
+        self.nStepSize=nStepSize
+        self.nStepBuffer=deque(maxlen=self.nStepSize)
+
+        
 
         self.setTorchSeed(0)
 
@@ -98,13 +105,33 @@ class DQNAgent():
             if nextStateSAs.numel() == 0:
                 targetQVal = reward
             else:
-                targetQVal = reward + self.gamma * torch.max(self.target(nextStateSAs.to(self.device)))
+                targetQVal = reward + (self.gamma ** self.nStepSize) * torch.max(self.target(nextStateSAs.to(self.device)))
             
             return torch.abs(qVal-targetQVal).data.numpy()
+        
+    def rememberNstep(self, SA, reward, nextStateSAs):
+        self.nStepBuffer.append((SA,reward,nextStateSAs))
+        if len(self.nStepBuffer)<self.nStepSize:
+            return
+  
+        _,lr,lnSAs=self.nStepBuffer[-1]
+        for (sa,r,nSAs) in reversed(list(self.nStepBuffer)[:-1]):
+            lr=r+self.gamma*lr if nSAs.numel()!=0 else r
+            lnSAs=lnSAs if nSAs.numel()!=0 else nSAs
+
+        lsa, _, _ = self.nStepBuffer[0]
+
+        self.buffer.add((lsa,lr,lnSAs))
+
+
     
     def remember(self, SA, reward, nextStateSAs):
         sa,rew,nSAs=(torch.tensor(SA,dtype=torch.float32), reward,torch.tensor(np.array(nextStateSAs),dtype=torch.float32))
 
+        if self.multiStep:
+            self.rememberNstep(sa,rew,nSAs)
+            return
+        
         if self.prioritized:
             error=self.calculateError(sa,rew,nSAs)
             self.buffer.add(error, (sa,rew,nSAs))
@@ -131,7 +158,7 @@ class DQNAgent():
                 if nextStateSAs.numel() == 0:
                     targetQVals[ind] = reward
                 else:
-                    targetQVals[ind] = reward + self.gamma * torch.max(self.target(nextStateSAs.to(self.device)))
+                    targetQVals[ind] = reward + (self.gamma**self.nStepSize) * torch.max(self.target(nextStateSAs.to(self.device)))
         
             if self.prioritized:
                 errors=torch.abs(qVals-targetQVals).data.numpy()
