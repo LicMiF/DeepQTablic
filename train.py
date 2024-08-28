@@ -34,7 +34,7 @@ if __name__ == '__main__':
     random.seed(0)
     tracker=Tracker(100)
     for ALPHA in [0.001]:
-        for GAMMA in [0,0.5,0.75,0.85,0.95,1]:
+        for GAMMA in [0.95,1]:
             print(f"Training with gamma {GAMMA} started and alpha {ALPHA}.")
             agent=DQNAgent(GAMMA,device=DEVICE,alpha=ALPHA)
             player = QPlayer(agent)
@@ -53,7 +53,6 @@ if __name__ == '__main__':
                 EPSILON_END=trainDict['EPSILON_END']
                 EPSILON_DECAY=trainDict['EPSILON_DECAY']
                 elapsedTime=trainDict['elapsedTime']
-                tracker=trainDict['tracker']
 
                 start=start-elapsedTime
 
@@ -98,11 +97,12 @@ if __name__ == '__main__':
                     print(f"Time needed for {episode} episodes with {GAMMA} and {ALPHA}: {time.time()-start}")
                     agent.backward()
 
+                if episode>=PLOT_FREQ and (episode % PLOT_FREQ == 0):
+                    tracker.evaluate(player,alpha=ALPHA,gamma=GAMMA,episode=episode)
 
                 if episode % SAVE_FREQ == 0:
                     print(f"Episode {episode} saved.")
                     agent.saveModelsParams(f"models/minimalModelParams/a{int(ALPHA*10000)}g{int(GAMMA*100)}e{episode}")
-
                     agent.saveCheckpoint({
                         'episode': episode+1,
                         'epsilon' : max(epsilon - EPSILON_DECAY, EPSILON_END),
@@ -114,12 +114,7 @@ if __name__ == '__main__':
                         'EPSILON_DECAY' : EPSILON_DECAY,
                         'rngState': random.getstate(),
                         'elapsedTime' : time.time()-start,
-                        'tracker' : tracker
                     },f"models/minimalModelParams/checkpoint{int(ALPHA*10000)}{int(GAMMA*100)}e{episode}")
-                
-                if episode>=PLOT_FREQ and (episode % PLOT_FREQ == 0):
-                    tracker.evaluate(player,alpha=ALPHA,gamma=GAMMA,episode=episode)
-                    
                 epsilon = max(epsilon - EPSILON_DECAY, EPSILON_END)
 
             end = time.time()

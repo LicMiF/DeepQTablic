@@ -6,7 +6,6 @@ from players.greedyPlayer import GreedyPlayer
 import matplotlib
 import matplotlib.pyplot as plt
 
-from collections import defaultdict
 import threading
 import copy
 
@@ -37,26 +36,64 @@ class Tracker:
 
         matplotlib.use('Agg') 
 
-        self._data = defaultdict(lambda: defaultdict(lambda: {"wins": [0], "pts": [0], "draws": [0], "episodes": [0]}))
+        self._data = {}
         self._nGames = nGames
         self._decks=[]
         for _ in range(self._nGames):
             self._decks.append(Tablic.getShuffledDeck())
+
+
+    def getContext(self):
+        return {"data": self._data,
+                "nGames": self._nGames,
+                "decks": self._decks}
+    
+    def setContext(self,cntxt):
+        self._data=cntxt["data"]
+        self._nGames=cntxt["nGames"]
+        self._decks=cntxt["decks"]
 
     def evaluate(self,player,alpha, gamma, episode,path="progress.png"):
         player0 = copy.deepcopy(player)
         thrd=threading.Thread(target=self.evaluateAndPlot,args=(player0,alpha,gamma,episode,path))
         thrd.start()
 
+    def checkAndInit(self,alpha,gamma):
+
+        if alpha not in self._data:
+            self._data[alpha]={}
+            self._data[alpha][gamma]={}
+            self._data[alpha][gamma]["wins"]=[0]
+            self._data[alpha][gamma]["pts"]=[0]
+            self._data[alpha][gamma]["draws"]=[0]
+            self._data[alpha][gamma]["episodes"]=[0]
+            return
+        
+        if gamma not in self._data[alpha]:
+            self._data[alpha][gamma]={}
+            self._data[alpha][gamma]["wins"]=[0]
+            self._data[alpha][gamma]["pts"]=[0]
+            self._data[alpha][gamma]["draws"]=[0]
+            self._data[alpha][gamma]["episodes"]=[0]
+            return
+
+
+
     def evaluateAndPlot(self,player0, alpha, gamma, episode,path="progress.png"):
+
+        alpha=int(alpha*10000)
+        gamma=int(gamma*100)
+
         player1 = GreedyPlayer()
         arena = DeckedTablicArena(player0, player1)
         wins, draws, _, pts, _ = arena.simulate_games(self._decks)
 
-        self._data[alpha*10000][gamma*100]["wins"].append(wins)
-        self._data[alpha*10000][gamma*100]["pts"].append(pts/self._nGames)
-        self._data[alpha*10000][gamma*100]["draws"].append(draws)
-        self._data[alpha*10000][gamma*100]["episodes"].append(episode/1000)
+        self.checkAndInit(alpha,gamma)
+
+        self._data[alpha][gamma]["wins"].append(wins)
+        self._data[alpha][gamma]["pts"].append(pts/self._nGames)
+        self._data[alpha][gamma]["draws"].append(draws)
+        self._data[alpha][gamma]["episodes"].append(episode/1000)
 
         self.plotAndSave(path)
 
