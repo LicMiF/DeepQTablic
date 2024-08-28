@@ -36,7 +36,7 @@ if __name__ == '__main__':
     for ALPHA in [0.001]:
         for GAMMA in [0.95,1]:
             print(f"Training with gamma {GAMMA} started and alpha {ALPHA}.")
-            agent=DQNAgent(GAMMA,device=DEVICE,alpha=ALPHA,multiStep=True)
+            agent=DQNAgent(GAMMA,device=DEVICE,alpha=ALPHA,multiStep=False,prioritized=True)
             player = QPlayer(agent)
             epsilon = EPSILON_START
             startEpisode=1

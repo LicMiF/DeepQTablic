@@ -1,14 +1,15 @@
 from dqn.dqn import DQN
 from dqn.replayBuffer import ReplayBuffer
 from dqn.prioritizedMem import Memory
-import numpy as np
+import torch.nn.functional as F
 import torch
+import numpy as np
 from collections import deque
 
 
 class DQNAgent():
 
-    def __init__(self,gamma,nStepSize,replBufferSize=1024*16,miniBatchSize=1024,alpha=0.001, device="cpu",prioritized=False,multiStep=False):
+    def __init__(self,gamma=0,nStepSize=1,replBufferSize=1024*16,miniBatchSize=1024,alpha=0.001, device="cpu",prioritized=False,multiStep=False):
         
         if device=="cuda" and not torch.cuda.is_available():
             raise SystemExit("Selected device is not available on current machine")
@@ -121,7 +122,11 @@ class DQNAgent():
 
         lsa, _, _ = self.nStepBuffer[0]
 
-        self.buffer.add((lsa,lr,lnSAs))
+        if self.prioritized:
+            error=self.calculateError(lsa,lr,nSAs)
+            self.buffer.add(error, (lsa,lr,lnSAs))
+        else:
+            self.buffer.add((lsa,lr,lnSAs))
 
 
     
@@ -167,6 +172,9 @@ class DQNAgent():
                 for i in range(len(miniBatch)):
                     idx = idxs[i]
                     self.buffer.update(idx, errors[i])
+
+        if self.prioritized:
+            loss = (torch.FloatTensor(isWeights) * F.mse_loss(qVals, targetQVals, reduction='none')).mean()
 
         loss = self.lossFn(qVals, targetQVals)
         loss.backward()
