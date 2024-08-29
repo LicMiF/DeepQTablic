@@ -1,4 +1,4 @@
-from dqn.dqn import DQN
+from dqn.dqn import getArchitecture
 from dqn.replayBuffer import ReplayBuffer
 from dqn.prioritizedMem import Memory
 import torch.nn.functional as F
@@ -9,7 +9,8 @@ from collections import deque
 
 class DQNAgent():
 
-    def __init__(self,gamma=0,nStepSize=1,replBufferSize=1024*16,miniBatchSize=1024,alpha=0.001, device="cpu",prioritized=False,multiStep=False):
+    def __init__(self,gamma=0,nStepSize=1,replBufferSize=1024*16,miniBatchSize=1024,alpha=0.001, device="cpu",prioritized=False,
+                 multiStep=False,architecture="Initial",decay=0):
         
         if device=="cuda" and not torch.cuda.is_available():
             raise SystemExit("Selected device is not available on current machine")
@@ -20,12 +21,12 @@ class DQNAgent():
         self.nStepSize=nStepSize
         self.nStepBuffer=deque(maxlen=self.nStepSize)
 
-        
 
         self.setTorchSeed(0)
 
-        self.target = DQN().to(self.device)
-        self.current = DQN().to(self.device)
+        self.target = getArchitecture(architecture).to(self.device)
+        self.current = getArchitecture(architecture).to(self.device)
+        self.architecture=architecture
 
 
         # self.gamma = torch.tensor(gamma).reshape((1,1))
@@ -39,7 +40,11 @@ class DQNAgent():
 
         self.lossFn = torch.nn.MSELoss(reduction='sum')
         self.optimizer = torch.optim.Adam(self.current.parameters(),
-                                            lr=alpha)
+                                            lr=alpha,
+                                            weight_decay=decay)
+        
+        # Enable anomaly detection
+        torch.autograd.set_detect_anomaly(True)
 
     @classmethod
     def getAvailDevice(cls):
