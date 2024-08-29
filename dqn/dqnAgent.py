@@ -180,8 +180,8 @@ class DQNAgent():
 
         if self.prioritized:
             loss = (torch.FloatTensor(isWeights) * F.mse_loss(qVals, targetQVals, reduction='none')).mean()
-
-        loss = self.lossFn(qVals, targetQVals)
+        else:
+            loss = self.lossFn(qVals, targetQVals)
         loss.backward()
         self.optimizer.step()
         self.optimizer.zero_grad()

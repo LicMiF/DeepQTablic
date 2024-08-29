@@ -65,7 +65,7 @@ if __name__ == '__main__':
                 game_rewards = [[],[]]
                 game_valid_actions = [[],[]]
 
-                if (episode > SWITCH_FREQ and episode % SWITCH_FREQ == 0):
+                if (episode > SWITCH_FREQ and episode % SWITCH_FREQ == 0) and player.agent.miniBatchSize*2<len(player.agent.buffer):
                     agent.updateTarget()
 
                 while not game.isTerminal:
@@ -93,7 +93,7 @@ if __name__ == '__main__':
                         valid_actions = game_valid_actions[current_player][i+1]
                         player.agent.remember(action, reward, valid_actions)
                 
-                if episode % UPDATE_FREQ == 0:
+                if episode % UPDATE_FREQ == 0 and player.agent.miniBatchSize*2<len(player.agent.buffer):
                     print(f"Time needed for {episode} episodes with {GAMMA} and {ALPHA}: {time.time()-start}")
                     agent.backward()
 
