@@ -15,11 +15,11 @@ class Tablic:
             self._deck=self.getShuffledDeck()
 
         self._table=[]
-        self._hands=[[], []] 
-        self._taken=[[], []] 
+        self._hands=[[] for _ in range(4)] # 4hands
+        self._taken=[[] for _ in range(4)] # 4taken
 
         self._isTerminal=False
-        self._currentPlayer=0
+        self._currentPlayer=0 # 4 plyr
         self._lastToTake=0
 
         self._deckPointer=0
@@ -27,7 +27,7 @@ class Tablic:
         self._tableSize=4
         self._moveCounter=0
 
-        self._rewards=np.zeros(2,dtype=int)
+        self._rewards=np.zeros(4,dtype=int) #4rew
 
         self._startGame()
 
@@ -293,14 +293,12 @@ class Tablic:
             self._rewards[player]+=3
         
 
+    # Here add loop for 4 players
     def _dealCards(self):
-        playerHand=self._deck[self._deckPointer:self._deckPointer+self._handSize]
-        self._addToHands(0,playerHand)
-        self._deckPointer=self._deckPointer+self._handSize
-
-        playerHand=self._deck[self._deckPointer:self._deckPointer+self._handSize]
-        self._addToHands(1,playerHand)
-        self._deckPointer=self._deckPointer+self._handSize
+        for i in range(4):
+            playerHand=self._deck[self._deckPointer:self._deckPointer+self._handSize]
+            self._addToHands(i,playerHand)
+            self._deckPointer=self._deckPointer+self._handSize
         
 
     def _startGame(self):
@@ -311,7 +309,7 @@ class Tablic:
 
 
     def _updateGameState(self):
-        if not sum([np.sum(lst) for lst in self._hands]):
+        if not sum([np.sum(hand) for hand in self._hands]): # just sum all hands (self._hands)?
             if self._deckPointer>= len(self._deck):
                 self._isTerminal=True
                 self._addToTaken(self._lastToTake, self._table)
@@ -339,7 +337,7 @@ class Tablic:
 
             self._addToTaken(self._currentPlayer,take)
             self._lastToTake = self._currentPlayer
-        self._currentPlayer = 1 - self._currentPlayer
+        self._currentPlayer = (self._currentPlayer+1) % 4 # CHANGE 
         self._moveCounter += 1
 
         assert prePlayChecksum==self._computeChecksum(), "Unexpected behaviour"
@@ -361,34 +359,41 @@ class Tablic:
         return totSum
         
 
+    def getEveryPlayerTaken(self,player=None):
+         curr=self._currentPlayer
+         if player:
+             curr=player
+         players=[(plyr)%4 for plyr in range(curr,curr+4)]
+         return np.concatenate([self.cardsToIndexArray(self._taken[player]) for player in players])
+
     def getPlayersStateRepresentation(self,player):
         return np.concatenate((self.cardsToIndexArray(self._table),
                                self.cardsToIndexArray(self._hands[player]),
-                               self.cardsToIndexArray(self._taken[player]),
-                               self.cardsToIndexArray(self._taken[1-player]),
+                               self.getEveryPlayerTaken(player),
                                [self._lastToTake,player]))
     
 
+    # Making independent of currentPlayer, fixed order of taken ?
     def getGameStateRepresentation(self):
         return np.concatenate((self.cardsToIndexArray(self._table),
                                self.cardsToIndexArray(self._hands[self._currentPlayer]),
-                               self.cardsToIndexArray(self._taken[self._currentPlayer]),
-                               self.cardsToIndexArray(self._taken[1-self._currentPlayer]),
+                               self.getEveryPlayerTaken(),
                                [self._lastToTake,self._currentPlayer]))
     
 
+    # loop over 4 players
     def displayGameInfo(self):
         print(f"Table: {self._table}")
         print(50*"-")
-        print(f"Current player hand: {self._hands[self._currentPlayer]}")
-        print(f"Opposite player hand: {self._hands[1-self._currentPlayer]}")
-        print(50*"-")
-        print(f"Current player taken: {self._taken[self._currentPlayer]}")
-        print(f"Opposite player taken: {self._taken[1-self._currentPlayer]}")
-        print(50*"-")
-        print(f"Current player reward: {self._rewards[self._currentPlayer]}")
-        print(f"Opposite player reward: {self._rewards[1-self._currentPlayer]}")
-        print(50*"-")
+        for i in range(4):
+            print(f"Player {i+1} hand: {self._hands[self._currentPlayer]}")
+
+            print(f"Player {i+1} taken: {self._taken[self._currentPlayer]}")
+
+            print(f"Player {i+1} reward: {self._rewards[self._currentPlayer]}")
+
+            print(50*"-")
+
         print(f"Current player: {self._currentPlayer}, last to take: {self._lastToTake}, deck pointer: {self._deckPointer}")
         print()
         print()
