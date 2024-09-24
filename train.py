@@ -36,7 +36,7 @@ if __name__ == '__main__':
     for ALPHA in [0.001]:
         for GAMMA in [0.95,1]:
             print(f"Training with gamma {GAMMA} started and alpha {ALPHA}.")
-            agent=DQNAgent(GAMMA,device=DEVICE,alpha=ALPHA,multiStep=False,architecture="resNoisy",decay=1e-5)
+            agent=DQNAgent(GAMMA,device=DEVICE,alpha=ALPHA)#multiStep=False,architecture="resNoisy",decay=1e-5)
             player = QPlayer(agent)
             epsilon = EPSILON_START
             startEpisode=1
@@ -61,12 +61,12 @@ if __name__ == '__main__':
             for episode in range(startEpisode, EPISODES+1):
                 deck= Tablic.getShuffledDeck()
                 game = Tablic(deck=deck)
-                game_actions = [[],[]]
-                game_rewards = [[],[]]
-                game_valid_actions = [[],[]]
+                game_actions = [[] for _ in range(4)]
+                game_rewards = [[] for _ in range(4)]
+                game_valid_actions = [[] for _ in range(4)]
 
-                if (episode > SWITCH_FREQ and episode % SWITCH_FREQ == 0) and player.agent.miniBatchSize*2<len(player.agent.buffer):
-                    agent.updateTarget()
+                if (episode > SWITCH_FREQ and episode % SWITCH_FREQ == 0):# and player.agent.miniBatchSize*2<len(player.agent.buffer):
+                    agent.updateTarget() # For 2 
 
                 while not game.isTerminal:
                     current_player = game.currentPlayer
@@ -84,25 +84,31 @@ if __name__ == '__main__':
                     game.playCard(played_card, list(played_take))
                     game_actions[current_player].append(state_action)
 
-                for current_player in range(2):
+                for current_player in range(4):
                     game_rewards[current_player].append(game.rewards[current_player])
                     game_valid_actions[current_player].append([])
+                for current_player in range(4):
                     for i in range(len(game_actions[current_player])):
                         action = game_actions[current_player][i]
-                        reward = game_rewards[current_player][i+1] - game_rewards[current_player][i]
+                        # print(i)
+                        # print(game_rewards)
+                        # print(len(game_rewards[current_player]))
+                        # print(len(game_rewards[(current_player+2)%4]))
+
+                        reward = game_rewards[current_player][i+1] - game_rewards[current_player][i] + (game_rewards[(current_player+2)%4][i+1] - game_rewards[(current_player+2)%4][i])
                         valid_actions = game_valid_actions[current_player][i+1]
                         player.agent.remember(action, reward, valid_actions)
                 
-                if episode % UPDATE_FREQ == 0 and player.agent.miniBatchSize*2<len(player.agent.buffer):
+                if episode % UPDATE_FREQ == 0: #and player.agent.miniBatchSize*2<len(player.agent.buffer):
                     print(f"Time needed for {episode} episodes with {GAMMA} and {ALPHA}: {time.time()-start}")
-                    agent.backward()
+                    agent.backward() # For two players
 
                 if episode>=PLOT_FREQ and (episode % PLOT_FREQ == 0):
-                    tracker.evaluate(player,alpha=ALPHA,gamma=GAMMA,episode=episode)
+                    tracker.evaluate(player,alpha=ALPHA,gamma=GAMMA,episode=episode,path="multiplayer.png") #Here
 
                 if episode % SAVE_FREQ == 0:
                     print(f"Episode {episode} saved.")
-                    agent.saveModelsParams(f"models/minimalModelParams/a{int(ALPHA*10000)}g{int(GAMMA*100)}e{episode}")
+                    agent.saveModelsParams(f"models/minimalModelParams/multiplayer{int(ALPHA*10000)}g{int(GAMMA*100)}e{episode}")
                     agent.saveCheckpoint({
                         'episode': episode+1,
                         'epsilon' : max(epsilon - EPSILON_DECAY, EPSILON_END),
@@ -114,7 +120,7 @@ if __name__ == '__main__':
                         'EPSILON_DECAY' : EPSILON_DECAY,
                         'rngState': random.getstate(),
                         'elapsedTime' : time.time()-start,
-                    },f"models/minimalModelParams/checkpoint{int(ALPHA*10000)}{int(GAMMA*100)}e{episode}")
+                    },f"models/minimalModelParams/checkpointmultiplayer{int(ALPHA*10000)}{int(GAMMA*100)}e{episode}")
                 epsilon = max(epsilon - EPSILON_DECAY, EPSILON_END)
 
             end = time.time()

@@ -42,7 +42,7 @@ class DQN(nn.Module):
 
     def __init__(self):
         super().__init__()
-        inputSize = 80
+        inputSize = 106
         outputSize = 1
         self.reluStack = nn.Sequential(
             nn.Linear(inputSize, inputSize*2),
@@ -57,7 +57,7 @@ class DQN(nn.Module):
 class DQNnoisy(nn.Module):
     def __init__(self):
         super().__init__()
-        inputSize = 80
+        inputSize = 106
         outputSize = 1
         self.reluStack = nn.Sequential(
             nn.Linear(inputSize, inputSize*2),
@@ -73,7 +73,7 @@ class DQNnoisy(nn.Module):
 class ResidualNoisyDeepDQN(nn.Module):
     def __init__(self):
         super().__init__()
-        inputSize = 80
+        inputSize = 106
         outputSize = 1
         self.fc1 = nn.Linear(inputSize, inputSize*4)
         self.fc2 = nn.Linear(inputSize*4, inputSize*4)

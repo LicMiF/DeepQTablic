@@ -11,24 +11,24 @@ import copy
 
 class DeckedTablicArena(TablicArena):
     def simulate_games(self, decks):
-        p1_wins, draws, p2_wins = (0, 0, 0)
+        t1_wins, draws, t2_wins = (0, 0, 0)
         total_results = [0, 0]
         for deck in decks:
             battle_results = [0, 0]
             results = self.start_and_play_game(deck,print_plays=False)
-            battle_results[0] += results[0]
-            battle_results[1] += results[1]
+            battle_results[0] += results[0]+results[2]
+            battle_results[1] += results[1]+results[3]
             self.switch_players()
             results = self.start_and_play_game(deck,print_plays=False)
-            battle_results[1] += results[0]
-            battle_results[0] += results[1]
+            battle_results[1] += results[0]+results[2]
+            battle_results[0] += results[1]+results[3]
             self.switch_players()
             total_results[0] += battle_results[0]
             total_results[1] += battle_results[1]
-            if (battle_results[0] > battle_results[1]): p1_wins += 1
+            if (battle_results[0] > battle_results[1]): t1_wins += 1
             if (battle_results[0] == battle_results[1]): draws += 1
-            if (battle_results[0] < battle_results[1]): p2_wins += 1
-        return (p1_wins, draws, p2_wins, total_results[0], total_results[1])
+            if (battle_results[0] < battle_results[1]): t2_wins += 1
+        return (t1_wins, draws, t2_wins, total_results[0], total_results[1])
 
 
 class Tracker:
@@ -85,7 +85,7 @@ class Tracker:
         gamma=int(gamma*100)
 
         player1 = GreedyPlayer()
-        arena = DeckedTablicArena(player0, player1)
+        arena = DeckedTablicArena(player0, player1,player0, player1)
         wins, draws, _, pts, _ = arena.simulate_games(self._decks)
 
         self.checkAndInit(alpha,gamma)

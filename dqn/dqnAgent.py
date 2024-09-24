@@ -156,7 +156,7 @@ class DQNAgent():
 
         # print(miniBatch)
 
-        currentSAmb = torch.zeros([len(miniBatch), 80])
+        currentSAmb = torch.zeros([len(miniBatch), 106]) #CHANGE THIS CONSTANT SOMEHOW
 
         for ind, (SA, _, _) in enumerate(miniBatch):
             currentSAmb[ind] = SA
